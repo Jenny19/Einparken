@@ -110,14 +110,14 @@ int main(int argc, char **argv)
         //maximaler Lenkwinkel
         float phi_lenk=24;
         //Radius des Autos bei max Einlenkung
-        float R=(2*radabstand)/sin(phi_lenk);
+        float R=(2*radabstand)/sin(phi_lenk*PI/180);
         float h=sqrt(b*b-a*a+2*a*R);
         //luecke ca 70 cm
         float parkluecke =2*h-b;
         //Rotationsradius
         float R_0=(b*b)/(2*a);
         //Winkel bis Wendepunkt erreicht in RAD
-        float theta=acos(1-(a/(R+R_0)))*180/PI;
+        float theta=acos(1-(a/(R+R_0)));
         //Wendepunkt bereits erreicht?
         bool wendepunkt=false;
 
