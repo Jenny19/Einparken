@@ -118,76 +118,79 @@ int main(int argc, char **argv)
         float R_0=(b*b)/(2*a);
         //Winkel bis Wendepunkt erreicht in RAD
         float theta=acos(1-(a/(R+R_0)));
-        //Wendepunkt bereits erreicht?
-        bool wendepunkt=false;
+         //Wendepunkt bereits erreicht?
+         bool wendepunkt=false;
+         bool haltepunkt=false;
 
-        float oldYaw;
-        float currentYaw=0;
-        //gesamtstrecke start und ende der parkluecke
-        float startPL;
-        float endPL = 0;
-        //--------
+         float oldYaw;
+         float currentYaw=0;
+         //gesamtstrecke start und ende der parkluecke
+         float startPL;
+         float endPL = 0;
+         //--------
 
-        float factor;
-        float speed;
-        int idx = 0;
-        bool schleife=false;
-        int itr = 2;
-        while(ros::ok()) {
-            avgSensR[itr] = sensors.range_sensor_right;
-            itr--;
-            if(itr<0)itr=2;
-            avgSensRight = calcAverage(avgSensR);
-            if(sensors.range_sensor_front < 0.1f && sensors.range_sensor_front != 0){
-                    cmd.motor_level = 0;
-                } else {
-                //cmd.motor_level = 5;
+         float factor;
+         float speed;
+         int idx = 0;
+         bool schleife=false;
+         int itr = 2;
+         while(ros::ok()) {
+             avgSensR[itr] = sensors.range_sensor_right;
+             itr--;
+             if(itr<0)itr=2;
+             avgSensRight = calcAverage(avgSensR);
+             if(sensors.range_sensor_front < 0.1f && sensors.range_sensor_front != 0){
+                     cmd.motor_level = 0;
+                 } else {
+                 //cmd.motor_level = 5;
 
-                        yawHandler(oldYaw,carInfo.yaw, currentYaw);
+                         yawHandler(oldYaw,carInfo.yaw, currentYaw);
+
+                         //Lückenerkennung
+                         if (luecke==false){
+                                 if (schleife==false){
+                                         cmd.motor_level = 5;
+                                         cmd.steering_level=0;
 
 
-                        //Lückenerkennung
-                        if (luecke==false){
-                                if (schleife==false){
-                                        cmd.motor_level = 5;
-                                        speed = 0.2f;
+                                         if (avgSensRight < distanceToWall - epsilon) {
+                                                 distanceToWall = avgSensRight;
+                                         }
+                                         if (avgSensRight > distanceToWall + epsilon) {
+                                                 schleife=true;
+                                                 startPL = carInfo.driven_distance;
+                                         }
+                                 }else{
+                                     if (schleife) {
+                                             endPL = carInfo.driven_distance;
+                                             if(endPL-startPL >= parkluecke ){
+                                                     luecke = true;
+                                                     currentYaw=0;
+                                             }else if(avgSensRight < distanceToWall - epsilon){
+                                                     schleife = false;
+                                             }
+                                     }
+                                 }
+                         }
 
+                         //Einparken
+                         if(luecke){
+                                 cmd.motor_level=-5;
 
-                                        if (avgSensRight < distanceToWall - epsilon) {
-                                                distanceToWall = avgSensRight;
-                                        }
-                                        if (avgSensRight > distanceToWall + epsilon) {
-                                                schleife=true;
-                                                startPL = carInfo.driven_distance;
-                                        }
-                                }else{
-                                    if (schleife) {
-                                            endPL = carInfo.driven_distance;
-                                            if(endPL-startPL >= parkluecke ){
-                                                    luecke = true;
-                                                    currentYaw=0;
-                                            }else if(avgSensRight < distanceToWall - epsilon){
-                                                    schleife = false;
-                                            }
-                                    }
-                                }
-                        }
-
-                        //Einparken
-                        if(luecke){
-                                cmd.motor_level=-5;
-
-                                if ((wendepunkt==false)&&(fabs(currentYaw)<fabs(theta))){
-                                        cmd.steering_level=50;
-                                } else if ((wendepunkt==true)&&(fabs(currentYaw)>0)){
-                                        cmd.steering_level=-50;
-                                } else if ((wendepunkt==true)&&(fabs(currentYaw)<=0.01)){
-                                        cmd.steering_level=0;
-                                        cmd.motor_level=0;
-                                }
-                                if (fabs(currentYaw)>=fabs(theta)){
-                                        wendepunkt=true;
-                                }
+                                 if ((wendepunkt==false)&&(fabs(currentYaw)<fabs(theta))){
+                                         cmd.steering_level=-50;
+                                 } else if ((haltepunkt==false)&&(wendepunkt==true)&&(fabs(currentYaw)>0)){
+                                         cmd.steering_level=50;
+                                 } else if ((haltepunkt==true)){
+                                         cmd.steering_level=0;
+                                         cmd.motor_level=0;
+                                 }
+                                 if (fabs(currentYaw)>=fabs(theta)){
+                                         wendepunkt=true;
+                                 }
+                                 if ((wendepunkt==true)&&(currentYaw<=0)){
+                                   haltepunkt=true;
+                                 }
                         }
 
                 }
