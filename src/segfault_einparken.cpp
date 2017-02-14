@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         float epsilon = 0.01;
 
         bool firstLoop = false;
-        bool luecke=false;
+        bool luecke=true;
 
         float breiteLuecke;
 
@@ -113,7 +113,8 @@ int main(int argc, char **argv)
         float R=(2*radabstand)/sin(phi_lenk*PI/180);
         float h=sqrt(b*b-a*a+2*a*R);
         //luecke ca 70 cm
-        float parkluecke =2*h-b;
+		// TODO offset bestimmen
+        float parkluecke =2*h-b+0.7;
         //Rotationsradius
         float R_0=(b*b)/(2*a);
         //Winkel bis Wendepunkt erreicht in RAD
@@ -175,7 +176,7 @@ int main(int argc, char **argv)
 
                          //Einparken
                          if(luecke){
-                                 cmd.motor_level=-5;
+                                 cmd.motor_level=-12;
 
                                  if ((wendepunkt==false)&&(fabs(currentYaw)<fabs(theta))){
                                          cmd.steering_level=-50;
@@ -199,7 +200,7 @@ int main(int argc, char **argv)
                         //    regc.control(sensors,cmd);
                         //tt.con(cmd);
                         //ROS_INFO( "PADDINGL; yaw: [%f]; yf_avg: [%f]; yr: [%f]; er: [%f]; DistFront: [%f]: ; Speed [%f]; steering: [%d]; yr_avg: [%f]", regc.yaw, regc.yf_avg,regc.yr, regc.er, sensors.range_sensor_front, carInfo.speed, cmd.steering_level, regc.yr_avg );
-
+			ROS_INFO( "sensor right: [%f]", sensors.range_sensor_right);
                         // publish
                         commands_pub.publish(cmd);
                         ros::spinOnce();
